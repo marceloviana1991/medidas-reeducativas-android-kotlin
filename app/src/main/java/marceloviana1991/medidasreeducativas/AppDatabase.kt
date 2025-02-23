@@ -17,8 +17,7 @@ abstract class AppDatabase: RoomDatabase() {
                 context,
                 AppDatabase::class.java,
                 "medidaReeducativa.db"
-            ).allowMainThreadQueries()
-                .build()
+            ).build()
         }
     }
 

@@ -15,6 +15,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import marceloviana1991.medidasreeducativas.databinding.ActivityMainBinding
 import marceloviana1991.medidasreeducativas.databinding.FormularioEditarBinding
 import java.time.LocalDate
@@ -41,12 +45,22 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        val medidasEducativas = mutableListOf<MedidaReeducativa>()
         adapter = ArrayAdapter(
             this,
             android.R.layout.simple_list_item_1,
-            medidaReeducativaDao.buscaTodas()
+            medidasEducativas
         )
         binding.listView.adapter = adapter
+
+
+        val mainScope = MainScope()
+        mainScope.launch {
+            val medidasReeducativas = withContext(Dispatchers.IO) {
+                medidaReeducativaDao.buscaTodas()
+            }
+            adapter.addAll(medidasReeducativas)
+        }
 
         binding.buttonSalvar.setOnClickListener {
             val interno = binding.editTextNome.text.toString().trim()
@@ -59,9 +73,12 @@ class MainActivity : AppCompatActivity() {
                     prazo = prazo,
                     localDate = LocalDate.now()
                 )
-                medidaReeducativaDao.salva(medidaReeducativa)
-                adapter.add(medidaReeducativa)
-                adapter.notifyDataSetChanged()
+                mainScope.launch {
+                    withContext(Dispatchers.IO) {
+                        medidaReeducativaDao.salva(medidaReeducativa)
+                    }
+                    adapter.add(medidaReeducativa)
+                }
                 binding.editTextNome.setText("")
                 binding.editTextMedidaReeducativa.setText("")
                 binding.editTextPrazo.setText("")
@@ -74,10 +91,21 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onResume() {
         super.onResume()
-        for (medidaReeducativa: MedidaReeducativa in medidaReeducativaDao.buscaTodas()) {
-            if (medidaReeducativa.verificaPrazo()) {
-                medidaReeducativaDao.exclui(medidaReeducativa)
-                adapter.remove(medidaReeducativa)
+        val mainScope = MainScope()
+        mainScope.launch {
+            val medidasReeducativas = withContext(Dispatchers.IO) {
+                medidaReeducativaDao.buscaTodas()
+            }
+            val medidasParaExcluir = medidasReeducativas.filter { it.verificaPrazo() }
+
+            withContext(Dispatchers.IO) {
+                medidasParaExcluir.forEach { medidaReeducativaDao.exclui(it) }
+            }
+
+            withContext(Dispatchers.Main) {
+                adapter.clear()
+                adapter.addAll(medidasReeducativas - medidasParaExcluir)
+                adapter.notifyDataSetChanged()
             }
         }
     }
@@ -110,12 +138,19 @@ class MainActivity : AppCompatActivity() {
                         if (interno.isNotEmpty() && intervencao.isNotEmpty() && prazo.isNotEmpty()) {
                             val medidaReeducativa = adapter.getItem(position)
                             if (medidaReeducativa != null) {
-                                adapter.remove(medidaReeducativa)
-                                medidaReeducativa.interno = interno
-                                medidaReeducativa.intervencao = intervencao
-                                medidaReeducativa.prazo = prazo
-                                medidaReeducativaDao.edita(medidaReeducativa)
-                                adapter.add(medidaReeducativa)
+                                val mainScope = MainScope()
+                                mainScope.launch {
+                                    adapter.remove(medidaReeducativa)
+                                    medidaReeducativa.interno = interno
+                                    medidaReeducativa.intervencao = intervencao
+                                    medidaReeducativa.prazo = prazo
+                                    withContext(Dispatchers.IO) {
+                                        medidaReeducativaDao.edita(medidaReeducativa)
+                                    }
+                                    adapter.add(medidaReeducativa)
+                                }
+
+
 
                             }
                         }
@@ -133,8 +168,13 @@ class MainActivity : AppCompatActivity() {
                     .setPositiveButton("CONFIRMAR" ) { _, _ ->
                         val medidaReeducativa = adapter.getItem(position)
                         if (medidaReeducativa != null) {
-                            medidaReeducativaDao.exclui(medidaReeducativa)
-                            adapter.remove(medidaReeducativa)
+                            val mainScope = MainScope()
+                            mainScope.launch {
+                                withContext(Dispatchers.IO) {
+                                    medidaReeducativaDao.exclui(medidaReeducativa)
+                                }
+                                adapter.remove(medidaReeducativa)
+                            }
                         }
                     }
                     .setNegativeButton("CANCELAR") { _, _ ->
