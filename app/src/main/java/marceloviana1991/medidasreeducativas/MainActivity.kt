@@ -25,7 +25,9 @@ class MainActivity : AppCompatActivity() {
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
-    private var position = -1
+    private val medidaReeducativaDao by lazy {
+        AppDatabase.instancia(this).medidaReeducativaDao()
+    }
     private lateinit var adapter: ArrayAdapter<MedidaReeducativa>
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -39,12 +41,10 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        val db = AppDatabase.instancia(this)
-        val medidaReeducativaDao = db.medidaReeducativaDao()
-
         adapter = ArrayAdapter(
-            this, android.R.layout.simple_list_item_1,
-            medidaReeducativaDao.buscaTodas() as ArrayList<MedidaReeducativa>
+            this,
+            android.R.layout.simple_list_item_1,
+            medidaReeducativaDao.buscaTodas()
         )
         binding.listView.adapter = adapter
 
@@ -72,8 +72,6 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onResume() {
         super.onResume()
-        val db = AppDatabase.instancia(this)
-        val medidaReeducativaDao = db.medidaReeducativaDao()
         for (medidaReeducativa: MedidaReeducativa in medidaReeducativaDao.buscaTodas()) {
             if (medidaReeducativa.verificaPrazo()) {
                 medidaReeducativaDao.exclui(medidaReeducativa)
@@ -81,14 +79,12 @@ class MainActivity : AppCompatActivity() {
         }
         adapter.clear()
         adapter.addAll(medidaReeducativaDao.buscaTodas())
-        adapter.notifyDataSetChanged()
     }
 
     private fun limpaEditText() {
         binding.editTextNome.setText("")
         binding.editTextMedidaReeducativa.setText("")
         binding.editTextPrazo.setText("")
-        position = -1
     }
 
     override fun onCreateContextMenu(
@@ -103,8 +99,6 @@ class MainActivity : AppCompatActivity() {
     override fun onContextItemSelected(item: MenuItem): Boolean {
         val info = item.menuInfo as AdapterView.AdapterContextMenuInfo
         val position = info.position
-        val db = AppDatabase.instancia(this)
-        val medidaReeducativaDao = db.medidaReeducativaDao()
         return when (item.itemId) {
             R.id.action_edit -> {
                 val bindingFormularioEditarBinding = FormularioEditarBinding.inflate(layoutInflater)
@@ -125,11 +119,9 @@ class MainActivity : AppCompatActivity() {
                                 medidaReeducativa.intervencao = intervencao
                                 medidaReeducativa.prazo = prazo
                                 medidaReeducativaDao.edita(medidaReeducativa)
+                                adapter.notifyDataSetChanged()
+
                             }
-                            adapter.clear()
-                            adapter.addAll(medidaReeducativaDao.buscaTodas())
-                            adapter.notifyDataSetChanged()
-                            limpaEditText()
                         }
                     }
                     .setNegativeButton("CANCELAR") { _, _ ->
@@ -143,12 +135,12 @@ class MainActivity : AppCompatActivity() {
                     .setTitle("Botão excluir")
                     .setMessage("Deseja realmente excluir essa medida reeducativa?")
                     .setPositiveButton("CONFIRMAR" ) { _, _ ->
-                        adapter.getItem(position)?.let { medidaReeducativaDao.exclui(it) }
-                        Toast.makeText(this, "Medida reeducativa excluida com sucesso!", Toast.LENGTH_SHORT)
-                            .show()
-                        adapter.clear()
-                        adapter.addAll(medidaReeducativaDao.buscaTodas())
-                        adapter.notifyDataSetChanged()
+                        val medidaReeducativa = adapter.getItem(position)
+                        if (medidaReeducativa != null) {
+                            medidaReeducativaDao.exclui(medidaReeducativa)
+                            adapter.clear()
+                            adapter.addAll(medidaReeducativaDao.buscaTodas())
+                        }
                     }
                     .setNegativeButton("CANCELAR") { _, _ ->
 
