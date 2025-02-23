@@ -77,10 +77,9 @@ class MainActivity : AppCompatActivity() {
         for (medidaReeducativa: MedidaReeducativa in medidaReeducativaDao.buscaTodas()) {
             if (medidaReeducativa.verificaPrazo()) {
                 medidaReeducativaDao.exclui(medidaReeducativa)
+                adapter.remove(medidaReeducativa)
             }
         }
-        adapter.clear()
-        adapter.addAll(medidaReeducativaDao.buscaTodas())
     }
 
     override fun onCreateContextMenu(
@@ -111,11 +110,12 @@ class MainActivity : AppCompatActivity() {
                         if (interno.isNotEmpty() && intervencao.isNotEmpty() && prazo.isNotEmpty()) {
                             val medidaReeducativa = adapter.getItem(position)
                             if (medidaReeducativa != null) {
+                                adapter.remove(medidaReeducativa)
                                 medidaReeducativa.interno = interno
                                 medidaReeducativa.intervencao = intervencao
                                 medidaReeducativa.prazo = prazo
                                 medidaReeducativaDao.edita(medidaReeducativa)
-                                adapter.notifyDataSetChanged()
+                                adapter.add(medidaReeducativa)
 
                             }
                         }
@@ -134,8 +134,7 @@ class MainActivity : AppCompatActivity() {
                         val medidaReeducativa = adapter.getItem(position)
                         if (medidaReeducativa != null) {
                             medidaReeducativaDao.exclui(medidaReeducativa)
-                            adapter.clear()
-                            adapter.addAll(medidaReeducativaDao.buscaTodas())
+                            adapter.remove(medidaReeducativa)
                         }
                     }
                     .setNegativeButton("CANCELAR") { _, _ ->
