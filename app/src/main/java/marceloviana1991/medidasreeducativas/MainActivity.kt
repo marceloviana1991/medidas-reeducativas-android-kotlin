@@ -62,7 +62,9 @@ class MainActivity : AppCompatActivity() {
                 medidaReeducativaDao.salva(medidaReeducativa)
                 adapter.add(medidaReeducativa)
                 adapter.notifyDataSetChanged()
-                limpaEditText()
+                binding.editTextNome.setText("")
+                binding.editTextMedidaReeducativa.setText("")
+                binding.editTextPrazo.setText("")
             }
 
         }
@@ -79,12 +81,6 @@ class MainActivity : AppCompatActivity() {
         }
         adapter.clear()
         adapter.addAll(medidaReeducativaDao.buscaTodas())
-    }
-
-    private fun limpaEditText() {
-        binding.editTextNome.setText("")
-        binding.editTextMedidaReeducativa.setText("")
-        binding.editTextPrazo.setText("")
     }
 
     override fun onCreateContextMenu(
