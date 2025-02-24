@@ -33,6 +33,7 @@ class MainActivity : AppCompatActivity() {
         AppDatabase.instancia(this).medidaReeducativaDao()
     }
     private lateinit var adapter: ArrayAdapter<MedidaReeducativa>
+    private val mainScope = MainScope()
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,13 +54,13 @@ class MainActivity : AppCompatActivity() {
         )
         binding.listView.adapter = adapter
 
-
-        val mainScope = MainScope()
         mainScope.launch {
             val medidasReeducativas = withContext(Dispatchers.IO) {
                 medidaReeducativaDao.buscaTodas()
             }
-            adapter.addAll(medidasReeducativas)
+            withContext(Dispatchers.Main) {
+                adapter.addAll(medidasReeducativas)
+            }
         }
 
         binding.buttonSalvar.setOnClickListener {
@@ -91,17 +92,14 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onResume() {
         super.onResume()
-        val mainScope = MainScope()
         mainScope.launch {
             val medidasReeducativas = withContext(Dispatchers.IO) {
                 medidaReeducativaDao.buscaTodas()
             }
             val medidasParaExcluir = medidasReeducativas.filter { it.verificaPrazo() }
-
             withContext(Dispatchers.IO) {
                 medidasParaExcluir.forEach { medidaReeducativaDao.exclui(it) }
             }
-
             withContext(Dispatchers.Main) {
                 adapter.clear()
                 adapter.addAll(medidasReeducativas - medidasParaExcluir)
@@ -138,7 +136,6 @@ class MainActivity : AppCompatActivity() {
                         if (interno.isNotEmpty() && intervencao.isNotEmpty() && prazo.isNotEmpty()) {
                             val medidaReeducativa = adapter.getItem(position)
                             if (medidaReeducativa != null) {
-                                val mainScope = MainScope()
                                 mainScope.launch {
                                     adapter.remove(medidaReeducativa)
                                     medidaReeducativa.interno = interno
@@ -147,7 +144,9 @@ class MainActivity : AppCompatActivity() {
                                     withContext(Dispatchers.IO) {
                                         medidaReeducativaDao.edita(medidaReeducativa)
                                     }
-                                    adapter.add(medidaReeducativa)
+                                    withContext(Dispatchers.Main) {
+                                        adapter.add(medidaReeducativa)
+                                    }
                                 }
 
 
@@ -168,12 +167,13 @@ class MainActivity : AppCompatActivity() {
                     .setPositiveButton("CONFIRMAR" ) { _, _ ->
                         val medidaReeducativa = adapter.getItem(position)
                         if (medidaReeducativa != null) {
-                            val mainScope = MainScope()
                             mainScope.launch {
                                 withContext(Dispatchers.IO) {
                                     medidaReeducativaDao.exclui(medidaReeducativa)
                                 }
-                                adapter.remove(medidaReeducativa)
+                                withContext(Dispatchers.Main) {
+                                    adapter.remove(medidaReeducativa)
+                                }
                             }
                         }
                     }
