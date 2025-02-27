@@ -10,15 +10,15 @@ import androidx.room.Update
 interface MedidaReeducativaDao {
 
     @Query("SELECT * FROM MedidaReeducativa")
-    fun buscaTodas(): List<MedidaReeducativa>
+    suspend fun buscaTodas(): List<MedidaReeducativa>
 
     @Insert
-    fun salva(medidaReeducativa: MedidaReeducativa)
+    suspend fun salva(medidaReeducativa: MedidaReeducativa)
 
     @Delete
-    fun exclui(medidaReeducativa: MedidaReeducativa)
+    suspend fun exclui(medidaReeducativa: MedidaReeducativa)
 
     @Update
-    fun edita(medidaReeducativa: MedidaReeducativa)
+    suspend fun edita(medidaReeducativa: MedidaReeducativa)
 
 }

@@ -55,9 +55,7 @@ class MainActivity : AppCompatActivity() {
         binding.listView.adapter = adapter
 
         lifecycleScope.launch {
-            val medidasReeducativas = withContext(Dispatchers.IO) {
-                medidaReeducativaDao.buscaTodas()
-            }
+            val medidasReeducativas = medidaReeducativaDao.buscaTodas()
             adapter.addAll(medidasReeducativas)
         }
 
@@ -73,9 +71,7 @@ class MainActivity : AppCompatActivity() {
                     localDate = LocalDate.now()
                 )
                 lifecycleScope.launch {
-                    withContext(Dispatchers.IO) {
-                        medidaReeducativaDao.salva(medidaReeducativa)
-                    }
+                    medidaReeducativaDao.salva(medidaReeducativa)
                     adapter.add(medidaReeducativa)
                 }
                 binding.editTextNome.setText("")
@@ -91,13 +87,9 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         lifecycleScope.launch {
-            val medidasReeducativas = withContext(Dispatchers.IO) {
-                medidaReeducativaDao.buscaTodas()
-            }
+            val medidasReeducativas = medidaReeducativaDao.buscaTodas()
             val medidasParaExcluir = medidasReeducativas.filter { it.verificaPrazo() }
-            withContext(Dispatchers.IO) {
-                medidasParaExcluir.forEach { medidaReeducativaDao.exclui(it) }
-            }
+            medidasParaExcluir.forEach { medidaReeducativaDao.exclui(it) }
             adapter.clear()
             adapter.addAll(medidasReeducativas - medidasParaExcluir)
             adapter.notifyDataSetChanged()
@@ -137,9 +129,7 @@ class MainActivity : AppCompatActivity() {
                                     medidaReeducativa.interno = interno
                                     medidaReeducativa.intervencao = intervencao
                                     medidaReeducativa.prazo = prazo
-                                    withContext(Dispatchers.IO) {
-                                        medidaReeducativaDao.edita(medidaReeducativa)
-                                    }
+                                    medidaReeducativaDao.edita(medidaReeducativa)
                                     adapter.add(medidaReeducativa)
                                 }
 
@@ -162,9 +152,7 @@ class MainActivity : AppCompatActivity() {
                         val medidaReeducativa = adapter.getItem(position)
                         if (medidaReeducativa != null) {
                             lifecycleScope.launch {
-                                withContext(Dispatchers.IO) {
-                                    medidaReeducativaDao.exclui(medidaReeducativa)
-                                }
+                                medidaReeducativaDao.exclui(medidaReeducativa)
                                 adapter.remove(medidaReeducativa)
                             }
                         }
