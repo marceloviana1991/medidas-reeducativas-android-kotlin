@@ -58,9 +58,7 @@ class MainActivity : AppCompatActivity() {
             val medidasReeducativas = withContext(Dispatchers.IO) {
                 medidaReeducativaDao.buscaTodas()
             }
-            withContext(Dispatchers.Main) {
-                adapter.addAll(medidasReeducativas)
-            }
+            adapter.addAll(medidasReeducativas)
         }
 
         binding.buttonSalvar.setOnClickListener {
@@ -100,11 +98,9 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.IO) {
                 medidasParaExcluir.forEach { medidaReeducativaDao.exclui(it) }
             }
-            withContext(Dispatchers.Main) {
-                adapter.clear()
-                adapter.addAll(medidasReeducativas - medidasParaExcluir)
-                adapter.notifyDataSetChanged()
-            }
+            adapter.clear()
+            adapter.addAll(medidasReeducativas - medidasParaExcluir)
+            adapter.notifyDataSetChanged()
         }
     }
 
@@ -144,9 +140,7 @@ class MainActivity : AppCompatActivity() {
                                     withContext(Dispatchers.IO) {
                                         medidaReeducativaDao.edita(medidaReeducativa)
                                     }
-                                    withContext(Dispatchers.Main) {
-                                        adapter.add(medidaReeducativa)
-                                    }
+                                    adapter.add(medidaReeducativa)
                                 }
 
 
@@ -171,9 +165,7 @@ class MainActivity : AppCompatActivity() {
                                 withContext(Dispatchers.IO) {
                                     medidaReeducativaDao.exclui(medidaReeducativa)
                                 }
-                                withContext(Dispatchers.Main) {
-                                    adapter.remove(medidaReeducativa)
-                                }
+                                adapter.remove(medidaReeducativa)
                             }
                         }
                     }
